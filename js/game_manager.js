@@ -1,8 +1,9 @@
-function GameManager(size, InputManager, Actuator, ScoreManager) {
+function GameManager(size, InputManager, Actuator, ScoreManager, MoveHistory) {
   this.size         = size; // Size of the grid
   this.inputManager = new InputManager;
   this.scoreManager = new ScoreManager;
   this.actuator     = new Actuator;
+  this.moveHistory  = new MoveHistory;
 
   this.startTiles   = 2;
 
@@ -36,17 +37,17 @@ GameManager.prototype.setup = function () {
 // Set up the initial tiles to start the game with
 GameManager.prototype.addStartTiles = function () {
   for (var i = 0; i < this.startTiles; i++) {
-    this.addRandomTile();
+    var tile = this.createRandomTile();
+    this.grid.insertTile(tile);
+    this.moveHistory.addInitialTile(tile);
   }
 };
 
 // Adds a tile in a random position
-GameManager.prototype.addRandomTile = function () {
+GameManager.prototype.createRandomTile = function () {
   if (this.grid.cellsAvailable()) {
     var value = Math.random() < 0.9 ? 2 : 4;
-    var tile = new Tile(this.grid.randomAvailableCell(), value);
-
-    this.grid.insertTile(tile);
+    return new Tile(this.grid.randomAvailableCell(), value);
   }
 };
 
@@ -136,7 +137,9 @@ GameManager.prototype.move = function (direction) {
   });
 
   if (moved) {
-    this.addRandomTile();
+    var tile = this.createRandomTile();
+    this.grid.insertTile(tile);
+    this.moveHistory.recordMove(direction, tile);
 
     if (!this.movesAvailable()) {
       this.over = true; // Game over!
